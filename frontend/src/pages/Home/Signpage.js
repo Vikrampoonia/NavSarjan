@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import singin from './Signin.jpg';
+import { getStoredUser, setAuthSession } from "../../utils/authSession";
 
 // Global variable to store user data
-export let userdata = {};
+export let userdata = getStoredUser();
 
 function Signpage() {
   const [email, setEmail] = useState("");
@@ -31,6 +32,12 @@ function Signpage() {
           name: response.data.data.name,
           role: response.data.data.role
         };
+
+        setAuthSession({
+          token: response.data.token,
+          refreshToken: response.data.refreshToken,
+          user: userdata,
+        });
 
         console.log("Userdata:", userdata);
 
@@ -120,9 +127,8 @@ function Signpage() {
                 <div>
                   <button
                     type="submit"
-                    className={`inline-flex items-center justify-center w-full px-4 py-4 text-base font-semibold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-md ${
-                      isLoading ? "cursor-not-allowed opacity-50" : ""
-                    }`}
+                    className={`inline-flex items-center justify-center w-full px-4 py-4 text-base font-semibold text-white transition-all duration-200 bg-blue-600 border border-transparent rounded-md ${isLoading ? "cursor-not-allowed opacity-50" : ""
+                      }`}
                     disabled={isLoading}
                   >
                     {isLoading ? "Logging in..." : "Log in"}
