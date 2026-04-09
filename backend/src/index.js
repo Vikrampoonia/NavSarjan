@@ -51,11 +51,35 @@ const AUTH_RATE_LIMIT_WINDOW_MS = Number(process.env.AUTH_RATE_LIMIT_WINDOW_MS) 
 const AUTH_RATE_LIMIT_MAX = Number(process.env.AUTH_RATE_LIMIT_MAX) || 20;
 const CORS_ORIGIN = process.env.CORS_ORIGIN || "http://localhost:3000";
 const MONGO_URI = getRequiredEnv("MONGO_URI");
+const MONGO_URI_FALLBACK = process.env.MONGO_URI_FALLBACK || "mongodb://127.0.0.1:27017/navsarjan";
+
+const isAtlasDnsFailure = (error) =>
+    error?.code === "ENOTFOUND" ||
+    error?.syscall === "querySrv" ||
+    String(error?.message || "").includes("querySrv ENOTFOUND");
 
 const start = async () => {
     try {
         const databaseManager = new DatabaseManager({ uri: MONGO_URI, dbName: DB_NAME });
-        const db = await databaseManager.connect();
+        let db;
+
+        try {
+            db = await databaseManager.connect();
+        } catch (primaryError) {
+            if (!isAtlasDnsFailure(primaryError)) {
+                throw primaryError;
+            }
+
+            console.warn(
+                `Primary MongoDB URI could not be resolved. Falling back to ${MONGO_URI_FALLBACK}`
+            );
+
+            const fallbackDatabaseManager = new DatabaseManager({
+                uri: MONGO_URI_FALLBACK,
+                dbName: DB_NAME,
+            });
+            db = await fallbackDatabaseManager.connect();
+        }
 
         const userModel = new UserModel(db);
         const historyModel = new HistoryModel(db);

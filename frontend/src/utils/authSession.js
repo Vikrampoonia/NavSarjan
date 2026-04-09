@@ -1,7 +1,10 @@
+import { APP_CONFIG } from "../config/appConfig";
+import { logoutUser } from "../services/backendApi";
 const TOKEN_KEY = "navsarjan_token";
 const REFRESH_TOKEN_KEY = "navsarjan_refresh_token";
 const USER_KEY = "navsarjan_user";
-const BACKEND_BASE_URL = "http://localhost:5001";
+
+const BACKEND_BASE_URL = APP_CONFIG.backendUrl;
 
 export const setAuthSession = ({ token, refreshToken, user }) => {
     if (token) {
@@ -44,13 +47,7 @@ export const performLogout = async () => {
 
     if (refreshToken) {
         try {
-            await fetch(`${BACKEND_BASE_URL}/api/logout`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ refreshToken }),
-            });
+            await logoutUser(refreshToken);
         } catch (_error) {
             // Ignore network/logout errors and always clear local session.
         }

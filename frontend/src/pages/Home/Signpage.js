@@ -1,11 +1,15 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import singin from './Signin.jpg';
 import { getStoredUser, setAuthSession } from "../../utils/authSession";
+import { forgotPassword, loginUser, resetPassword } from "../../services/backendApi";
+import { MESSAGES } from "../../constants/messages";
 
 // Global variable to store user data
 export let userdata = getStoredUser();
+export const setUserdata = (nextUser = {}) => {
+  userdata = nextUser;
+};
 
 function Signpage() {
   const [email, setEmail] = useState("");
@@ -17,40 +21,81 @@ function Signpage() {
     e.preventDefault(); // Prevent page reload
     setIsLoading(true); // Set loading state
     try {
-      const response = await axios.post("http://localhost:5001/api/login", {
+      const response = await loginUser({
         email,
         password,
       });
 
       console.log("Response:", JSON.stringify(response.data, null, 2));
 
-      if (response.data.success) {
+      if (response.success) {
         // Save user data to the global variable
-        userdata = {
-          email: response.data.data.email,
-          id: response.data.data.id,
-          name: response.data.data.name,
-          role: response.data.data.role
+        const nextUser = {
+          email: response.data.email,
+          id: response.data.id,
+          name: response.data.name,
+          role: response.data.role
         };
+        setUserdata(nextUser);
 
         setAuthSession({
-          token: response.data.token,
-          refreshToken: response.data.refreshToken,
-          user: userdata,
+          token: response.token,
+          refreshToken: response.refreshToken,
+          user: nextUser,
         });
 
-        console.log("Userdata:", userdata);
+        console.log("Userdata:", nextUser);
 
-        alert("Login Successful!");// Pass the email to the parent component
+        alert(MESSAGES.AUTH.LOGIN_SUCCESS);// Pass the email to the parent component
         navigate("/dashboard"); // Navigate to the dashboard
       } else {
-        alert(response.data.message);
+        alert(response.message);
       }
     } catch (error) {
       console.error("Error during login:", error);
-      alert("Login failed. Please try again.");
+      alert(MESSAGES.AUTH.LOGIN_FAILED);
     } finally {
       setIsLoading(false); // Reset loading state
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    const forgotEmail = window.prompt(MESSAGES.AUTH.FORGOT_PASSWORD_PROMPT_EMAIL, email || "");
+
+    if (!forgotEmail) {
+      return;
+    }
+
+    try {
+      const forgotResponse = await forgotPassword(forgotEmail);
+      alert(forgotResponse?.message || MESSAGES.AUTH.FORGOT_PASSWORD_REQUESTED);
+
+      let token = forgotResponse?.resetToken || "";
+
+      if (!token) {
+        token = window.prompt(MESSAGES.AUTH.FORGOT_PASSWORD_PROMPT_TOKEN, "") || "";
+      }
+
+      if (!token) {
+        return;
+      }
+
+      const newPassword = window.prompt(MESSAGES.AUTH.FORGOT_PASSWORD_PROMPT_NEW_PASSWORD, "") || "";
+
+      if (!newPassword) {
+        return;
+      }
+
+      const resetResponse = await resetPassword({
+        email: forgotEmail,
+        resetToken: token,
+        newPassword,
+      });
+
+      alert(resetResponse?.message || MESSAGES.AUTH.PASSWORD_RESET_SUCCESS);
+    } catch (error) {
+      console.error("Error during password reset:", error);
+      alert(MESSAGES.AUTH.PASSWORD_RESET_FAILED);
     }
   };
 
@@ -103,13 +148,14 @@ function Signpage() {
                       Password
                     </label>
 
-                    <a
-                      href="#"
+                    <button
+                      type="button"
                       title="Forgot Password"
                       className="text-sm font-medium text-blue-600 hover:underline hover:text-blue-700 focus:text-blue-700"
+                      onClick={handleForgotPassword}
                     >
                       Forgot password?
-                    </a>
+                    </button>
                   </div>
                   <div className="mt-2.5">
                     <input

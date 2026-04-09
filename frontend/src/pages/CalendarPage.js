@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import axios from "axios";
 import { Modal, Button, Form } from "react-bootstrap";
 import { userdata } from "./Home/Signpage";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { fetchDocuments, insertDocument } from "../services/backendApi";
 
 const localizer = momentLocalizer(moment);
 
@@ -31,12 +31,12 @@ const CalendarPage = () => {
           return;
         }
 
-        const response = await axios.post("http://localhost:5001/api/fetch", {
+        const response = await fetchDocuments({
           collectionName: "events",
           condition: { Participants: user.id },
         });
 
-        const formattedEvents = response.data.data.map((event) => ({
+        const formattedEvents = response.data.map((event) => ({
           title: event.Title,
           start: new Date(event.Start),
           end: new Date(event.End),
@@ -79,7 +79,7 @@ const CalendarPage = () => {
         Participants: [user.id],
       };
 
-      await axios.post("http://localhost:5001/api/insert", {
+      await insertDocument({
         collectionName: "events",
         data: eventToSave,
       });

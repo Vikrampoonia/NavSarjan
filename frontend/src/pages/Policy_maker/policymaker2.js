@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { fetchDocuments, replaceDocument } from "../../services/backendApi";
 import {
   Table,
   TableBody,
@@ -27,14 +27,14 @@ function ChangeHistoryTableSenior() {
   useEffect(() => {
     const fetchRecords = async () => {
       try {
-        const response = await axios.post("http://localhost:5001/api/fetch", {
+        const response = await fetchDocuments({
           collectionName: "history",
           condition: { isVerification: 1 },
           projection: {},
         });
-        setRecords(response.data.data);
+        setRecords(response.data);
         setCurrentVal(records.isVerification)
-        setFilteredRecords(response.data.data);
+        setFilteredRecords(response.data);
       } catch (error) {
         console.error("Error fetching records:", error);
       }
@@ -94,12 +94,12 @@ function ChangeHistoryTableSenior() {
 
     try {
       // Update the record in the database
-      await axios.post("http://localhost:5001/api/replace", {
+      await replaceDocument({
         collectionName: "history",
         condition: { _id: recordId },
         data: {
           ...record,
-          isVerification: currentVal+1,
+          isVerification: currentVal + 1,
           rejectionReason: isVerified ? null : rejectionReason,
         },
       });
@@ -164,7 +164,7 @@ function ChangeHistoryTableSenior() {
             {filteredRecords.map((record) => (
               <TableRow key={record._id}>
                 <TableCell>
-                  <Link to={`/dashboard/${record.entityType}s/${record.entityType}profile`} state={ {name:record.fieldChanged, id: record.entityId}}> {record.entityId}
+                  <Link to={`/dashboard/${record.entityType}s/${record.entityType}profile`} state={{ name: record.fieldChanged, id: record.entityId }}> {record.entityId}
                   </Link>
                 </TableCell>
                 <TableCell>{record.fieldChanged}</TableCell>

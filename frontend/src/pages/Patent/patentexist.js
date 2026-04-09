@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import {
   Table,
   TableBody,
@@ -18,6 +17,7 @@ import {
   Skeleton
 } from "@mui/material";
 import { userdata } from "../Home/Signpage";
+import { fetchDocuments } from "../../services/backendApi";
 import Timeline from "../../components/Timeline";
 
 const IPRDatas = () => {
@@ -37,33 +37,33 @@ const IPRDatas = () => {
       declaration: true,
       status: "Sent to Our Executives",
       message: "Initial message",
-    },{
-        applicantName: "John Doe",
-        address: "123 Main St",
-        nationality: "American",
-        phone: "1234567890",
-        email: "john.doe@example.com",
-        inventionTitle: "Invention 1",
-        abstract: "This is an abstract",
-        description: "This is a detailed description",
-        claims: "This is my claim",
-        documents: [{ url: "http://example.com/doc1", name: "Document 1" }],
-        declaration: true,
-        status: "Sent to Our Executives",
-        message: "Initial message",
-      },
+    }, {
+      applicantName: "John Doe",
+      address: "123 Main St",
+      nationality: "American",
+      phone: "1234567890",
+      email: "john.doe@example.com",
+      inventionTitle: "Invention 1",
+      abstract: "This is an abstract",
+      description: "This is a detailed description",
+      claims: "This is my claim",
+      documents: [{ url: "http://example.com/doc1", name: "Document 1" }],
+      declaration: true,
+      status: "Sent to Our Executives",
+      message: "Initial message",
+    },
   ]);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.post("http://localhost:5001/api/fetch", {
+        const response = await fetchDocuments({
           collectionName: "ipr", // Name of the collection
-          condition: {email: userdata.email}, // Replace with your condition, e.g., {status: "active"}
+          condition: { email: userdata.email }, // Replace with your condition, e.g., {status: "active"}
           projection: {}, // Fields to fetch
         });
 
-        if (response.data.success) {
-          const projects = response.data.data;
+        if (response.success) {
+          const projects = response.data;
           console.log(projects)
 
           // Format data for rows
@@ -106,17 +106,17 @@ const IPRDatas = () => {
     );
     handleDialogClose();
   };
-  if (loading){
-    return(
+  if (loading) {
+    return (
       <div style={{ width: '100%' }}>
-      <Skeleton animation="wave" width='100%' height='150px'/>
-      <div style={{width: '100%', display: 'flex', position: 'relative', top: '-50px'}}>
-        <Skeleton  width='100%' style={{marginRight: '16px', height: '300px', padding: '0px'}}/>
-        <Skeleton animation="wave" width='100%' style={{marginRight: '16px', height: '300px', padding: '0px'}}/>
-        <Skeleton animation={false} width='100%' style={{ height: '300px', padding: '0px'}}/>
+        <Skeleton animation="wave" width='100%' height='150px' />
+        <div style={{ width: '100%', display: 'flex', position: 'relative', top: '-50px' }}>
+          <Skeleton width='100%' style={{ marginRight: '16px', height: '300px', padding: '0px' }} />
+          <Skeleton animation="wave" width='100%' style={{ marginRight: '16px', height: '300px', padding: '0px' }} />
+          <Skeleton animation={false} width='100%' style={{ height: '300px', padding: '0px' }} />
+        </div>
+        <Skeleton animation="wave" width='100%' height='500px' style={{ margin: '0px', padding: '0px', position: 'relative', top: '-150px' }} />
       </div>
-      <Skeleton animation="wave" width='100%' height='500px' style={{margin: '0px', padding: '0px', position: 'relative', top: '-150px'}}/>
-    </div>
     );
   }
   return (
@@ -200,12 +200,12 @@ const IPRDatas = () => {
                   </div>
                 ))}
               </Typography>
-              
+
             </div>
           )}
         </DialogContent>
         <DialogActions>
-        <Timeline />
+          <Timeline />
         </DialogActions>
       </Dialog>
     </div>

@@ -31,11 +31,13 @@ import ChangeHistoryTableSuper from './pages/Policy_maker/policymaker3.js';
 import Videopage from './pages/Video/homepage.js';
 import RoomPage from './pages/Video/roompage.js';
 import ResourceRequestForm from './pages/resource.js';
+import Investments from './pages/Investments/Investments';
 
 import Gujarat_Policy from './pages/LandingPage/Gujarat_Policy.js';
 import Services from './pages/LandingPage/Services.js';
 import { Component } from './pages/LandingPage/Footer.js';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ROLES } from './constants/roles';
 
 export let socketvalue = {}
 function App() {
@@ -63,8 +65,8 @@ function App() {
 
         <Route path="/sign-page" element={<Signpage />} />
         <Route path="/create-account" element={<CreateAccount />} />
-        <Route path="/policymaker2" element={<ChangeHistoryTableSenior />} />
-        <Route path="/policymaker3" element={<ChangeHistoryTableSuper />} />
+        <Route path="/policymaker2" element={<ProtectedRoute allowedRoles={[ROLES.POLICY_MAKER, ROLES.ADMIN]}><ChangeHistoryTableSenior /></ProtectedRoute>} />
+        <Route path="/policymaker3" element={<ProtectedRoute allowedRoles={[ROLES.POLICY_MAKER, ROLES.ADMIN]}><ChangeHistoryTableSuper /></ProtectedRoute>} />
         {/* Forms Routes */}
 
         <Route path={'/dashboard'} exact={true} element={<ProtectedRoute><Dashboard socketValue={setSocket} /></ProtectedRoute>}>
@@ -74,14 +76,15 @@ function App() {
           <Route path={'/dashboard/room/:roomId'} exact={true} element={<RoomPage />} />
 
           <Route path={'/dashboard/calendar'} exact={true} element={<CalendarPage />} />
-          <Route path="/dashboard/policymaker" element={<ChangeHistoryTable />} />
-          <Route path="/dashboard/policymaker2" element={<ChangeHistoryTableSenior />} />
-          <Route path="/dashboard/policymaker3" element={<ChangeHistoryTableSuper />} />
-          <Route path="/dashboard/iprdata" element={<IPRDatas />} />
+          <Route path="/dashboard/policymaker" element={<ProtectedRoute allowedRoles={[ROLES.POLICY_MAKER, ROLES.ADMIN]}><ChangeHistoryTable /></ProtectedRoute>} />
+          <Route path="/dashboard/policymaker2" element={<ProtectedRoute allowedRoles={[ROLES.POLICY_MAKER, ROLES.ADMIN]}><ChangeHistoryTableSenior /></ProtectedRoute>} />
+          <Route path="/dashboard/policymaker3" element={<ProtectedRoute allowedRoles={[ROLES.POLICY_MAKER, ROLES.ADMIN]}><ChangeHistoryTableSuper /></ProtectedRoute>} />
+          <Route path="/dashboard/iprdata" element={<ProtectedRoute allowedRoles={[ROLES.POLICY_MAKER, ROLES.ADMIN]}><IPRDatas /></ProtectedRoute>} />
           <Route path={'/dashboard/projects'} exact={true} element={<Project />} />
-          <Route path={'/dashboard/myprojects'} exact={true} element={<MyProject />} />
-          <Route path={'/dashboard/myprojects/new'} exact={true} element={<NewProject />} />
-          <Route path={'/dashboard/patents'} exact={true} element={<PatentForm />}>
+          <Route path={'/dashboard/investments'} exact={true} element={<ProtectedRoute allowedRoles={[ROLES.INVESTOR, ROLES.ADMIN]}><Investments /></ProtectedRoute>} />
+          <Route path={'/dashboard/myprojects'} exact={true} element={<ProtectedRoute allowedRoles={[ROLES.STARTUP, ROLES.ADMIN]}><MyProject /></ProtectedRoute>} />
+          <Route path={'/dashboard/myprojects/new'} exact={true} element={<ProtectedRoute allowedRoles={[ROLES.STARTUP, ROLES.ADMIN]}><NewProject /></ProtectedRoute>} />
+          <Route path={'/dashboard/patents'} exact={true} element={<ProtectedRoute allowedRoles={[ROLES.STARTUP, ROLES.ADMIN]}><PatentForm /></ProtectedRoute>}>
             <Route path={'/dashboard/patents/'} exact={true} element={<PatentApplicationForm />} />
             <Route path={'/dashboard/patents/active'} exact={true} element={<IPRDatas />} />
           </Route>
@@ -89,9 +92,9 @@ function App() {
           <Route path={'/dashboard/myprojects/projectprofile'} exact={true} element={<ProjectProfile />} />
           <Route path={'/dashboard/startups'} exact={true} element={<Startup />} />
           <Route path={'/dashboard/startups/startupprofile'} exact={true} element={<StartupProfile />} />
-          <Route path={'/dashboard/startups/startupprofile/resourcerequest'} exact={true} element={<ResourceRequestForm />} />
-          <Route path={'/dashboard/mystartups'} exact={true} element={<MyStartup />} />
-          <Route path={'/dashboard/mystartups/new'} exact={true} element={<Newstartup />} />
+          <Route path={'/dashboard/startups/startupprofile/resourcerequest'} exact={true} element={<ProtectedRoute allowedRoles={[ROLES.STARTUP, ROLES.ADMIN]}><ResourceRequestForm /></ProtectedRoute>} />
+          <Route path={'/dashboard/mystartups'} exact={true} element={<ProtectedRoute allowedRoles={[ROLES.STARTUP, ROLES.ADMIN]}><MyStartup /></ProtectedRoute>} />
+          <Route path={'/dashboard/mystartups/new'} exact={true} element={<ProtectedRoute allowedRoles={[ROLES.STARTUP, ROLES.ADMIN]}><Newstartup /></ProtectedRoute>} />
           <Route path={'/dashboard/profile'} exact={true} element={<ProfilePage />} />
           {/* <Route path={'/dashboard/policymaker'} exact={true} element={<PolicyMakerLandingPage/>}/> */}
 

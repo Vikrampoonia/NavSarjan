@@ -21,6 +21,24 @@ export const buildAuthRoutes = () => {
         authController.register
     );
     router.post(
+        "/register/free",
+        authLimiter,
+        validateBody(["name", "email", "password", "address", "phone", "dob", "role"], MESSAGES.VALIDATION.ALL_FIELDS_REQUIRED),
+        authController.registerFree
+    );
+    router.post(
+        "/forgot-password",
+        authLimiter,
+        validateBody(["email"], MESSAGES.VALIDATION.EMAIL_REQUIRED),
+        authController.forgotPassword
+    );
+    router.post(
+        "/reset-password",
+        authLimiter,
+        validateBody(["email", "resetToken", "newPassword"], MESSAGES.VALIDATION.EMAIL_TOKEN_PASSWORD_REQUIRED),
+        authController.resetPassword
+    );
+    router.post(
         "/refresh",
         authLimiter,
         validateBody(["refreshToken"], MESSAGES.AUTH.REFRESH_TOKEN_REQUIRED),

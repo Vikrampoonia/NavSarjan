@@ -6,14 +6,18 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Bubble } from '@typebot.io/react';
 import { clearAuthSession, getAuthToken, getRefreshToken, setAuthSession } from './utils/authSession';
+import { APP_CONFIG } from './config/appConfig';
+import { refreshAuthToken } from './services/backendApi';
 
-const BACKEND_BASE_URL = 'http://localhost:5001';
+const BACKEND_BASE_URL = APP_CONFIG.backendUrl;
 
-const isBackendRequest = (url = '') => url.includes('localhost:5001');
+const isBackendRequest = (url = '') => url.includes(BACKEND_BASE_URL);
 const isAuthBootstrapEndpoint = (url = '') =>
   url.includes('/api/login') ||
   url.includes('/api/register') ||
-  url.includes('/api/refresh');
+  url.includes('/api/refresh') ||
+  url.includes('/api/forgot-password') ||
+  url.includes('/api/reset-password');
 
 let refreshPromise = null;
 
@@ -23,19 +27,19 @@ const refreshAccessToken = async () => {
     throw new Error('Missing refresh token');
   }
 
-  const response = await axios.post(`${BACKEND_BASE_URL}/api/refresh`, { refreshToken });
+  const response = await refreshAuthToken(refreshToken);
 
-  if (!response?.data?.success || !response?.data?.token) {
+  if (!response?.success || !response?.token) {
     throw new Error('Failed to refresh token');
   }
 
   setAuthSession({
-    token: response.data.token,
-    refreshToken: response.data.refreshToken,
-    user: response.data.data,
+    token: response.token,
+    refreshToken: response.refreshToken,
+    user: response.data,
   });
 
-  return response.data.token;
+  return response.token;
 };
 
 axios.interceptors.request.use((config) => {
@@ -87,7 +91,7 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <Bubble
-      typebot="customer-support-5n1p09i"
+      typebot={APP_CONFIG.typebotId}
       theme={{ button: { backgroundColor: "#0042DA" } }}
     />
     <App />

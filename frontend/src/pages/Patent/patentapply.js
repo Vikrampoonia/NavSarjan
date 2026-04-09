@@ -9,15 +9,13 @@ import {
     Checkbox,
     FormControlLabel,
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import DeleteIcon from "@mui/icons-material/Delete";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import axios from "axios";
 import { userdata } from "../Home/Signpage";
+import { insertDocument } from "../../services/backendApi";
 
 const IPRForm = () => {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
+    const defaultFormState = {
         applicantName: "",
         address: "",
         nationality: "",
@@ -31,6 +29,10 @@ const IPRForm = () => {
         declaration: false,
         status: "Sent to Our Executives",
         message: "",
+    };
+
+    const [formData, setFormData] = useState({
+        ...defaultFormState,
     });
 
     const handleChange = (e) => {
@@ -68,45 +70,45 @@ const IPRForm = () => {
         });
         console.log(formData);
         try {
-            const response = await axios.post("http://localhost:5001/api/insert", {
-              collectionName: "ipr",
-              data: formData,
+            const response = await insertDocument({
+                collectionName: "ipr",
+                data: formData,
             });
-      
-            if (response.status === 200) {
-              console.log("Project inserted successfully:", response.data);
-              alert("Project created successfully!");
+
+            if (response.success) {
+                console.log("Project inserted successfully:", response);
+                alert("Project created successfully!");
+                setFormData({ ...defaultFormState });
             } else {
-              console.error("Failed to insert project:", response.data.message);
-              alert(`Error: ${response.data.message}`);
+                console.error("Failed to insert project:", response.message);
+                alert(`Error: ${response.message}`);
             }
-            navigate('/dashboard')
-          } catch (error) {
+        } catch (error) {
             console.error("Error while submitting project:", error);
-            alert("Failed to create project. Please try again.");
-          }
+            alert(error?.response?.data?.message || "Failed to create project. Please try again.");
+        }
     };
 
     return (
         <form onSubmit={handleSubmit}>
-            <Typography variant="h6" gutterBottom style={{marginTop: '10px'}}>
+            <Typography variant="h6" gutterBottom style={{ marginTop: '10px' }}>
                 Applicant Details
             </Typography>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                    <TextField fullWidth  label="Applicant Name" name="applicantName" value={formData.applicantName} onChange={handleChange} required/>
+                    <TextField fullWidth label="Applicant Name" name="applicantName" value={formData.applicantName} onChange={handleChange} required />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Address" name="address" value={formData.address} onChange={handleChange} multiline rows={3} required/>
+                    <TextField fullWidth label="Address" name="address" value={formData.address} onChange={handleChange} multiline rows={3} required />
                 </Grid>
                 <Grid item xs={6}>
-                    <TextField fullWidth label="Nationality" name="nationality" value={formData.nationality} onChange={handleChange} required/>
+                    <TextField fullWidth label="Nationality" name="nationality" value={formData.nationality} onChange={handleChange} required />
                 </Grid>
                 <Grid item xs={6}>
-                    <TextField fullWidth label="Phone" name="phone" value={formData.phone} onChange={handleChange}required/>
+                    <TextField fullWidth label="Phone" name="phone" value={formData.phone} onChange={handleChange} required />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Email" name="email" value={formData.email} disabled={true} onChange={handleChange} required type="email"/>
+                    <TextField fullWidth label="Email" name="email" value={formData.email} disabled={true} onChange={handleChange} required type="email" />
                 </Grid>
             </Grid>
 
@@ -115,16 +117,16 @@ const IPRForm = () => {
             </Typography>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Title of Invention" name="inventionTitle" value={formData.inventionTitle} onChange={handleChange} required/>
+                    <TextField fullWidth label="Title of Invention" name="inventionTitle" value={formData.inventionTitle} onChange={handleChange} required />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Abstract" name="abstract" value={formData.abstract} onChange={handleChange} multiline rows={4} required/>
+                    <TextField fullWidth label="Abstract" name="abstract" value={formData.abstract} onChange={handleChange} multiline rows={4} required />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Detailed Description" name="description" value={formData.description} onChange={handleChange} multiline rows={4} required/>
+                    <TextField fullWidth label="Detailed Description" name="description" value={formData.description} onChange={handleChange} multiline rows={4} required />
                 </Grid>
                 <Grid item xs={12}>
-                    <TextField fullWidth label="Claims" name="claims" value={formData.claims} onChange={handleChange} multiline rows={4} required/>
+                    <TextField fullWidth label="Claims" name="claims" value={formData.claims} onChange={handleChange} multiline rows={4} required />
                 </Grid>
             </Grid>
 
@@ -132,7 +134,7 @@ const IPRForm = () => {
                 Upload Additional Documents
             </Typography>
             <label htmlFor="document-upload">
-                <input id="document-upload" multiple type="file" style={{ display: "none" }} onChange={handleFileUpload}/>
+                <input id="document-upload" multiple type="file" style={{ display: "none" }} onChange={handleFileUpload} />
                 <Button variant="outlined" component="span" fullWidth>
                     Add Documents
                 </Button>
@@ -143,7 +145,7 @@ const IPRForm = () => {
                     <Typography variant="h6">Uploaded Documents</Typography>
                 )}
                 {formData.documents.map((file, index) => (
-                    <Box key={index} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1, p: 1, border: "1px solid #ccc", borderRadius: "4px"}}>
+                    <Box key={index} sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 1, p: 1, border: "1px solid #ccc", borderRadius: "4px" }}>
                         <Typography>{file.name}</Typography>
                         <Box>
                             <IconButton component="a" href={URL.createObjectURL(file)} target="_blank" rel="noopener noreferrer">
@@ -157,7 +159,7 @@ const IPRForm = () => {
                 ))}
             </Box>
 
-            <FormControlLabel control={<Checkbox name="declaration" checked={formData.declaration} onChange={handleChange} required/>} label="I hereby declare that the information provided is true and accurate." sx={{ mt: 4 }}/>
+            <FormControlLabel control={<Checkbox name="declaration" checked={formData.declaration} onChange={handleChange} required />} label="I hereby declare that the information provided is true and accurate." sx={{ mt: 4 }} />
 
             <Button variant="contained" type="submit" sx={{ mt: 2 }}>
                 Submit

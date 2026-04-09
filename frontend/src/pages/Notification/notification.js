@@ -1,27 +1,28 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from 'axios';
 import '../../styles/notify.css';
 import { socketvalue } from '../../App';
+import { getNotifications, removeNotification } from '../../services/backendApi';
 
 function Notify() {
   const location = useLocation();
   const { name, id } = location.state || {};
-  const user=id;
+  const user = id;
   const [notifyQueue, setNotifyQueue] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://localhost:5001/home/notification', { params: { user } })
+    getNotifications(user)
       .then(res => {
-        console.log("Fetched notifications:", res.data);
-        setNotifyQueue(res.data);
+        console.log("Fetched notifications:", res);
+        setNotifyQueue(res);
       })
       .catch(err => console.log(err));
   }, [user]);
 
   const handleNotification = useCallback((source, priority) => {
-    axios.post('http://localhost:5001/home/chat/removeNotify', { params: { source, priority, user } })
+    removeNotification({ source, priority, user })
       .then(() => {
         setNotifyQueue(prevQueue =>
           prevQueue.filter(notify =>
@@ -45,7 +46,7 @@ function Notify() {
             <div
               className="notificationMsg"
               key={indx}
-              onClick={()=>handleNotification(notify.Source, notify.Priority)}
+              onClick={() => handleNotification(notify.Source, notify.Priority)}
             >
               {notify.Source} Sent message. Your message: {notify.Message}
             </div>

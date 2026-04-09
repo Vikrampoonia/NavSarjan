@@ -1,6 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
+import { PUBLIC_REGISTRATION_ROLES, normalizeRole } from "../constants/roles.js";
 
 export class AuthService {
     constructor({
@@ -182,7 +183,24 @@ export class AuthService {
     }
 
     async register(payload) {
-        const { name, email, password, address, phone, dob, social, role, image, metadata = {} } = payload;
+        const {
+            name,
+            email,
+            password,
+            address,
+            phone,
+            dob,
+            social,
+            role,
+            image,
+            accountType = "free",
+            metadata = {},
+        } = payload;
+
+        const normalizedRole = normalizeRole(role);
+        if (!PUBLIC_REGISTRATION_ROLES.includes(normalizedRole)) {
+            return { ok: false, code: "INVALID_ROLE" };
+        }
 
         const existingUser = await this.userModel.findOne({ email });
         if (existingUser) {
@@ -200,7 +218,8 @@ export class AuthService {
             dob,
             image: image || null,
             social: social || null,
-            role,
+            role: normalizedRole,
+            accountType,
         };
 
         const result = await this.userModel.insertOne(newUser);
@@ -217,6 +236,7 @@ export class AuthService {
             email: newUser.email,
             name: newUser.name,
             role: newUser.role,
+            accountType: newUser.accountType,
         };
 
         const tokens = await this.buildAuthTokens(safeUser, metadata);
@@ -226,6 +246,65 @@ export class AuthService {
             user: safeUser,
             ...tokens,
         };
+    }
+
+    async forgotPassword({ email }) {
+        const user = await this.userModel.findOne({ email });
+
+        if (!user) {
+            return { ok: true };
+        }
+
+        const resetToken = randomUUID();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+
+        await this.userModel.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    passwordResetToken: resetToken,
+                    passwordResetExpiresAt: expiresAt,
+                },
+            }
+        );
+
+        return { ok: true, resetToken };
+    }
+
+    async resetPassword({ email, resetToken, newPassword }) {
+        const user = await this.userModel.findOne({ email });
+
+        if (!user || user.passwordResetToken !== resetToken) {
+            return { ok: false, code: "INVALID_RESET_TOKEN" };
+        }
+
+        if (!user.passwordResetExpiresAt || new Date(user.passwordResetExpiresAt) < new Date()) {
+            return { ok: false, code: "RESET_TOKEN_EXPIRED" };
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await this.userModel.updateOne(
+            { _id: user._id },
+            {
+                $set: {
+                    password: hashedPassword,
+                },
+                $unset: {
+                    passwordResetToken: "",
+                    passwordResetExpiresAt: "",
+                },
+            }
+        );
+
+        await this.historyService.logHistory({
+            entityType: "user",
+            entityId: email,
+            fieldChanged: "Password Reset",
+            changedBy: email,
+        });
+
+        return { ok: true };
     }
 
     async refresh(refreshToken) {

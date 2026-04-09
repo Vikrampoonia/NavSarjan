@@ -7,6 +7,7 @@ import Header from "../../components/Header/Header";
 import { useLocation, Outlet } from "react-router-dom";
 import { io } from "socket.io-client";
 import { userdata } from '../Home/Signpage'
+import { APP_CONFIG } from "../../config/appConfig";
 
 const MyContext = createContext();
 
@@ -15,7 +16,7 @@ const MyContext = createContext();
 
 
 const Dashboard = ({ socketValue }) => {
-  const [socket, setSocket] = useState(null);
+  const [, setSocket] = useState(null);
   let user = userdata.email;
   const token = localStorage.getItem('navsarjan_token');
   console.log("user in dashboard to check socket: " + user);
@@ -28,7 +29,7 @@ const Dashboard = ({ socketValue }) => {
     }
 
     // Create a new socket connection
-    const newSocket = io('http://localhost:5001/', {
+    const newSocket = io(APP_CONFIG.socketUrl, {
       // Optional: add connection options if needed
       reconnection: true,
       reconnectionAttempts: 5,

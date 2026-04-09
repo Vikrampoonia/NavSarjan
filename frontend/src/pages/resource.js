@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
+import { fetchDocuments, insertDocument } from '../services/backendApi';
 import {
   Input,
   TextareaAutosize,
@@ -17,8 +17,9 @@ import {
   Divider
 } from '@mui/material';
 import { useLocation } from 'react-router-dom';
+import { userdata } from './Home/Signpage';
+import { ROLES } from '../constants/roles';
 
-// Comprehensive Resource Categories
 const RESOURCE_CATEGORIES = {
   'Physical Infrastructure': [
     'Laboratory Space',
@@ -53,7 +54,10 @@ const RESOURCE_CATEGORIES = {
 
 const ResourceRequestForm = () => {
   const location = useLocation();
-  const { name, id } = location.state || {};
+  const routeState = location.state || {};
+  const startupIdFromRoute = routeState.startupId || routeState.id || '';
+  const normalizedRole = String(userdata?.role || '').trim().toLowerCase();
+
   const [formData, setFormData] = useState({
     requestedResources: [],
     additionalResource: '',
@@ -62,57 +66,75 @@ const ResourceRequestForm = () => {
     additionalDetails: '',
     timeAndDateNeeded: ''
   });
+
   const [errors, setErrors] = useState({});
   const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedInstitute, setSelectedInstitute] = useState(null);
+  const [selectedInstituteName, setSelectedInstituteName] = useState('');
   const [filteredInstitutes, setFilteredInstitutes] = useState([]);
   const [allInstitutes, setAllInstitutes] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedCategories, setSelectedCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [startupContext, setStartupContext] = useState({
+    id: startupIdFromRoute,
+    name: routeState.startupName || routeState.name || '',
+    founderEmail: routeState.founderEmail || String(userdata?.email || ''),
+    requestedByName: String(userdata?.name || ''),
+  });
 
-  // Utility functions
   const formatDate = (date) => date.toISOString().split('T')[0];
-
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 
-  // Fetch institutes from MongoDB
   useEffect(() => {
-    const fetchInstitutes = async () => {
+    const initializeForm = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.post('http://localhost:5001/api/fetch', {
-          collectionName: 'institute',
-          condition: {}, // Fetch all institutes
-          projection: {} // Fetch all fields
-        });
 
-        if (response.data.success) {
-          setAllInstitutes(response.data.data);
-          setFilteredInstitutes(response.data.data);
-        } else {
+        const [instituteResponse, startupResponse] = await Promise.all([
+          fetchDocuments({
+            collectionName: 'institute',
+            condition: {},
+            projection: {}
+          }),
+          fetchDocuments({
+            collectionName: 'startup',
+            condition: startupIdFromRoute
+              ? { _id: startupIdFromRoute }
+              : { founderuserid: String(userdata?.email || '').trim() },
+            projection: { _id: 1, name: 1, founderuserid: 1 }
+          })
+        ]);
+
+        if (!instituteResponse.success) {
           throw new Error('Failed to fetch institutes');
         }
+
+        const institutes = Array.isArray(instituteResponse.data) ? instituteResponse.data : [];
+        setAllInstitutes(institutes);
+        setFilteredInstitutes(institutes);
+
+        if (startupResponse.success) {
+          const startups = Array.isArray(startupResponse.data) ? startupResponse.data : [];
+          const startupDoc = startups[0];
+          if (startupDoc) {
+            setStartupContext((prev) => ({
+              ...prev,
+              id: String(startupDoc._id || prev.id || ''),
+              name: startupDoc.name || prev.name,
+              founderEmail: startupDoc.founderuserid || prev.founderEmail,
+            }));
+          }
+        }
       } catch (err) {
-        console.error('Error fetching institutes:', err);
-        setError('Failed to load institutes. Please try again later.');
+        console.error('Error initializing resource form:', err);
+        setError('Failed to load resource request form data. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchInstitutes();
-  }, []);
-
-  // Derive all categories from fetched institutes
-  const allCategories = useMemo(() => {
-    const categories = new Set();
-    allInstitutes.forEach(institute => {
-      institute.categories.forEach(category => categories.add(category));
-    });
-    return Array.from(categories);
-  }, [allInstitutes]);
+    initializeForm();
+  }, [startupIdFromRoute]);
 
   const daysInMonth = useMemo(() => {
     const year = currentMonth.getFullYear();
@@ -121,25 +143,23 @@ const ResourceRequestForm = () => {
     return Array.from({ length: totalDays }, (_, i) => new Date(year, month, i + 1));
   }, [currentMonth]);
 
-  // Filter institutes based on available dates and selected categories
+  const selectedInstitute = useMemo(
+    () => allInstitutes.find((institute) => institute.name === selectedInstituteName) || null,
+    [allInstitutes, selectedInstituteName]
+  );
+
   useEffect(() => {
-    const filtered = allInstitutes.filter(institute => {
-      const hasAvailableDate = institute.availableDates.some(dateRange => {
+    const filtered = allInstitutes.filter((institute) => {
+      const instituteDates = Array.isArray(institute?.availableDates) ? institute.availableDates : [];
+      return instituteDates.some((dateRange) => {
         const start = new Date(dateRange.start);
-        return start.getMonth() === currentMonth.getMonth() &&
-               start.getFullYear() === currentMonth.getFullYear();
+        return start.getMonth() === currentMonth.getMonth() && start.getFullYear() === currentMonth.getFullYear();
       });
-
-      const matchesCategories = selectedCategories.length === 0 || 
-        selectedCategories.some(category => institute.categories.includes(category));
-
-      return hasAvailableDate && matchesCategories;
     });
 
     setFilteredInstitutes(filtered);
-  }, [currentMonth, selectedCategories, allInstitutes]);
+  }, [currentMonth, allInstitutes]);
 
-  // Handle resource toggle for request form
   const handleResourceToggle = (resource) => {
     setFormData((prev) => {
       const currentResources = prev.requestedResources;
@@ -158,6 +178,7 @@ const ResourceRequestForm = () => {
 
   const validateForm = () => {
     const newErrors = {};
+
     if (formData.requestedResources.length === 0 && !formData.additionalResource.trim()) {
       newErrors.requestedResources = 'Please select at least one resource or specify an additional one.';
     }
@@ -167,66 +188,78 @@ const ResourceRequestForm = () => {
     if (!formData.timeAndDateNeeded) {
       newErrors.timeAndDateNeeded = 'Please select a time and date for the resources.';
     }
+    if (!selectedInstituteName) {
+      newErrors.institute = 'Please select an institute.';
+    }
+    if (!startupContext.id) {
+      newErrors.startup = 'Startup details are missing. Open this form from your startup profile.';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      try {
-        // Prepare the resource request data to match the backend schema
-        const resourceRequestData = {
-          categories: [
-            ...formData.requestedResources,
-            ...(formData.additionalResource ? [formData.additionalResource] : [])
-          ],
-          reason: formData.resourceJustification,
-          urgency: formData.urgencyLevel.charAt(0).toUpperCase() + formData.urgencyLevel.slice(1), // Capitalize first letter
-          date: new Date().toISOString().split('T')[0], // Current date
-          startupRequestingid: id, // Replace with actual startup ID
-          institute: selectedInstitute ? selectedInstitute.name : 'Not Selected', 
-          selectedDate: formData.timeAndDateNeeded ? new Date(formData.timeAndDateNeeded).toISOString().split('T')[0] : '',
-          verified: false,
-          additionalDetails: formData.additionalDetails || ''
-        };
 
-        // Send POST request to backend
-        const response = await axios.post('http://localhost:5001/api/insert', {
-          collectionName: 'resources',
-          data: resourceRequestData
-        });
+    if (!validateForm()) {
+      return;
+    }
 
-        if (response.data.success) {
-          alert('Resource request submitted successfully!');
-          console.log('Resource Request Submitted:', response.data);
-          
-          // Reset form
-          setFormData({
-            requestedResources: [],
-            additionalResource: '',
-            urgencyLevel: 'medium',
-            resourceJustification: '',
-            additionalDetails: '',
-            timeAndDateNeeded: ''
-          });
-          setErrors({});
-          setSelectedInstitute(null);
-          setSelectedDate(null);
-        } else {
-          alert('Failed to submit resource request');
-        }
-      } catch (error) {
-        console.error('Error submitting resource request:', error);
-        alert('Error submitting resource request');
+    try {
+      const resourceRequestData = {
+        categories: [
+          ...formData.requestedResources,
+          ...(formData.additionalResource ? [formData.additionalResource] : [])
+        ],
+        reason: formData.resourceJustification,
+        urgency: formData.urgencyLevel.charAt(0).toUpperCase() + formData.urgencyLevel.slice(1),
+        date: new Date().toISOString().split('T')[0],
+        startupRequestingid: startupContext.id,
+        startupName: startupContext.name,
+        founderuserid: startupContext.founderEmail,
+        requestRaisedByEmail: String(userdata?.email || startupContext.founderEmail || ''),
+        requestRaisedByName: String(userdata?.name || startupContext.requestedByName || ''),
+        institute: selectedInstituteName,
+        selectedDate: formData.timeAndDateNeeded ? new Date(formData.timeAndDateNeeded).toISOString().split('T')[0] : '',
+        verified: false,
+        status: 'pending',
+        additionalDetails: formData.additionalDetails || '',
+        createdAt: new Date().toISOString(),
+      };
+
+      const response = await insertDocument({
+        collectionName: 'resources',
+        data: resourceRequestData
+      });
+
+      if (!response.success) {
+        alert('Failed to submit resource request');
+        return;
       }
+
+      alert('Resource request submitted successfully!');
+      setFormData({
+        requestedResources: [],
+        additionalResource: '',
+        urgencyLevel: 'medium',
+        resourceJustification: '',
+        additionalDetails: '',
+        timeAndDateNeeded: ''
+      });
+      setErrors({});
+      setSelectedInstituteName('');
+      setSelectedDate(null);
+    } catch (submitError) {
+      console.error('Error submitting resource request:', submitError);
+      alert('Error submitting resource request');
     }
   };
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
-    const filtered = filteredInstitutes.filter(institute =>
-      institute.availableDates.some(dateRange => {
+    const filtered = allInstitutes.filter((institute) =>
+      (Array.isArray(institute?.availableDates) ? institute.availableDates : []).some((dateRange) => {
         const start = new Date(dateRange.start);
         const end = new Date(dateRange.end);
         return date >= start && date <= end;
@@ -237,6 +270,7 @@ const ResourceRequestForm = () => {
 
   const renderCalendarDays = () => {
     const firstDayOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1).getDay();
+
     return (
       <>
         {[...Array(firstDayOfMonth)].map((_, index) => (
@@ -245,12 +279,13 @@ const ResourceRequestForm = () => {
         {daysInMonth.map((day) => {
           const isSelected = selectedDate && formatDate(day) === formatDate(selectedDate);
           const hasAvailableInstitutes = filteredInstitutes.some((institute) =>
-            institute.availableDates.some((dateRange) => {
+            (Array.isArray(institute?.availableDates) ? institute.availableDates : []).some((dateRange) => {
               const start = new Date(dateRange.start);
               const end = new Date(dateRange.end);
               return day >= start && day <= end;
             })
           );
+
           return (
             <div
               key={day.toString()}
@@ -265,32 +300,10 @@ const ResourceRequestForm = () => {
     );
   };
 
-  const handleCategoryToggle = (category) => {
-    setSelectedCategories((prev) =>
-      prev.includes(category) ? prev.filter((c) => c !== category) : [...prev, category]
-    );
-    setSelectedDate(null);
-    setSelectedInstitute(null);
-  };
-
-  const handleApplySubmit = () => {
-    if (selectedInstitute && selectedDate) {
-      // Update form data with selected institute
-      setFormData(prev => ({
-        ...prev,
-        timeAndDateNeeded: selectedDate.toISOString().split('T')[0]
-      }));
-      setSelectedInstitute(selectedInstitute);
-    } else {
-      alert('Please select both an institute and a date.');
-    }
-  };
-
-  // Render loading or error state if needed
   if (isLoading) {
     return (
       <div className="container mx-auto p-4">
-        <Typography variant="h6">Loading institutes...</Typography>
+        <Typography variant="h6">Loading resource form...</Typography>
       </div>
     );
   }
@@ -303,17 +316,39 @@ const ResourceRequestForm = () => {
     );
   }
 
+  if (normalizedRole !== ROLES.STARTUP && normalizedRole !== ROLES.ADMIN) {
+    return (
+      <div className="container mx-auto p-4">
+        <Typography variant="h6" color="error">Only startup and admin users can submit resource requests.</Typography>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <Card>
         <CardHeader
           title="Resource Request Form"
-          subheader="Submit your resource requirements for IPR, Projects, and Startups"
+          subheader="Submit your startup resource requirements for policy review"
           style={{ textAlign: 'center', padding: '20px 0' }}
         />
         <CardContent>
           <form onSubmit={handleSubmit}>
-            {/* Resource Selection */}
+            <Typography variant="h6" gutterBottom>Startup Details</Typography>
+            <FormControl style={{ marginBottom: '20px', width: '100%' }}>
+              <InputLabel htmlFor="startupName">Startup Name</InputLabel>
+              <Input id="startupName" value={startupContext.name} disabled />
+            </FormControl>
+            <FormControl style={{ marginBottom: '20px', width: '100%' }}>
+              <InputLabel htmlFor="founderEmail">Founder Email</InputLabel>
+              <Input id="founderEmail" value={startupContext.founderEmail} disabled />
+            </FormControl>
+            {errors.startup && (
+              <Typography color="error" variant="body2">{errors.startup}</Typography>
+            )}
+
+            <Divider style={{ margin: '20px 0' }} />
+
             <Typography variant="h6" gutterBottom>Select Required Resources</Typography>
             {Object.entries(RESOURCE_CATEGORIES).map(([category, resources]) => (
               <div key={category} style={{ marginBottom: '20px' }}>
@@ -332,6 +367,7 @@ const ResourceRequestForm = () => {
                 ))}
               </div>
             ))}
+
             <FormControl style={{ marginBottom: '20px', width: '100%' }}>
               <InputLabel htmlFor="additionalResource">Other Resource (if not listed)</InputLabel>
               <Input
@@ -348,7 +384,6 @@ const ResourceRequestForm = () => {
 
             <Divider style={{ margin: '20px 0' }} />
 
-            {/* Resource Justification */}
             <Typography variant="h6" gutterBottom>Resource Justification</Typography>
             <TextareaAutosize
               name="resourceJustification"
@@ -364,7 +399,6 @@ const ResourceRequestForm = () => {
 
             <Divider style={{ margin: '20px 0' }} />
 
-            {/* Additional Details */}
             <Typography variant="h6" gutterBottom>Additional Details</Typography>
             <TextareaAutosize
               name="additionalDetails"
@@ -377,7 +411,6 @@ const ResourceRequestForm = () => {
 
             <Divider style={{ margin: '20px 0' }} />
 
-            {/* Calendar and Institute Selection */}
             <div className="mb-4">
               <h2 className="text-xl font-semibold mb-2">Select Available Date</h2>
               <div className="flex items-center justify-between mb-2">
@@ -402,24 +435,25 @@ const ResourceRequestForm = () => {
               </div>
             </div>
 
-            {/* Institute Selection */}
             <Typography variant="h6" gutterBottom>Select Institute</Typography>
             <FormControl fullWidth style={{ marginBottom: '20px' }}>
               <InputLabel>Available Institutes</InputLabel>
               <Select
-                value={selectedInstitute || ''}
-                onChange={(e) => setSelectedInstitute(e.target.value)}
+                value={selectedInstituteName}
+                onChange={(e) => setSelectedInstituteName(e.target.value)}
                 label="Available Institutes"
               >
                 {filteredInstitutes.map((institute) => (
-                  <MenuItem key={institute.name} value={institute}>
+                  <MenuItem key={institute.name} value={institute.name}>
                     {institute.name}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
+            {errors.institute && (
+              <Typography color="error" variant="body2">{errors.institute}</Typography>
+            )}
 
-            {/* Time and Date Needed */}
             <div>
               <Typography variant="h6" className="mb-3">Specific Date and Time When Needed</Typography>
               <Input
@@ -434,7 +468,6 @@ const ResourceRequestForm = () => {
               )}
             </div>
 
-            {/* Urgency Level */}
             <FormControl style={{ marginBottom: '20px', width: '100%' }}>
               <InputLabel>Urgency Level</InputLabel>
               <Select
@@ -449,7 +482,6 @@ const ResourceRequestForm = () => {
               </Select>
             </FormControl>
 
-            {/* Submit Button */}
             <Button
               type="submit"
               variant="contained"

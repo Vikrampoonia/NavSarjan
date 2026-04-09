@@ -16,6 +16,32 @@ export class CollectionModel {
         return this.collection().find(condition).project(projection).toArray();
     }
 
+    async countDocuments(condition = {}) {
+        return this.collection().countDocuments(condition);
+    }
+
+    async findPaginated({ condition = {}, projection = {}, page = 0, pageSize = 20 }) {
+        const safePage = Math.max(Number(page) || 0, 0);
+        const safePageSize = Math.max(Number(pageSize) || 20, 1);
+
+        const [rows, total] = await Promise.all([
+            this.collection()
+                .find(condition)
+                .project(projection)
+                .skip(safePage * safePageSize)
+                .limit(safePageSize)
+                .toArray(),
+            this.countDocuments(condition),
+        ]);
+
+        return {
+            rows,
+            total,
+            page: safePage,
+            pageSize: safePageSize,
+        };
+    }
+
     async findOne(condition = {}, projection = {}) {
         return this.collection().findOne(condition, projection);
     }

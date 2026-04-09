@@ -10,6 +10,7 @@ import { FaGear } from "react-icons/fa6"
 // import { MyContext } from "../../App";
 import { userdata } from "../../pages/Home/Signpage";
 import { performLogout } from "../../utils/authSession";
+import { ROLES } from "../../constants/roles";
 
 
 const Sidebar = () => {
@@ -24,7 +25,8 @@ const Sidebar = () => {
         { text: "Projects", icon: <AiFillProject />, link: "projects" },
         { text: "Startups", icon: <MdEmojiObjects />, link: "startups" }
     ];
-    const user = [
+
+    const startup = [
         { text: "My Project", icon: <FaProjectDiagram />, link: "myprojects" },
         { text: "Projects", icon: <AiFillProject />, link: "projects" },
         { text: "Startups", icon: <MdEmojiObjects />, link: "startups" },
@@ -32,9 +34,26 @@ const Sidebar = () => {
         { text: "Patents", icon: <FaFileAlt />, link: "patents" }
     ];
 
-    let valUser = user;
-    if (userdata.role === "investor")
-        valUser = investor;
+    const policyMaker = [
+        { text: "Projects", icon: <AiFillProject />, link: "projects" },
+        { text: "Startups", icon: <MdEmojiObjects />, link: "startups" },
+        { text: "Policy Reviews", icon: <FaGear />, link: "policymaker" },
+    ];
+
+    const admin = [
+        { text: "Projects", icon: <AiFillProject />, link: "projects" },
+        { text: "Startups", icon: <MdEmojiObjects />, link: "startups" },
+        { text: "My Project", icon: <FaProjectDiagram />, link: "myprojects" },
+        { text: "My Brand", icon: <FaSeedling />, link: "mystartups" },
+        { text: "Patents", icon: <FaFileAlt />, link: "patents" },
+        { text: "Policy Reviews", icon: <FaGear />, link: "policymaker" },
+    ];
+
+    const normalizedRole = String(userdata?.role || "").trim().toLowerCase();
+    let valUser = startup;
+    if (normalizedRole === ROLES.INVESTOR) valUser = investor;
+    if (normalizedRole === ROLES.POLICY_MAKER) valUser = policyMaker;
+    if (normalizedRole === ROLES.ADMIN) valUser = admin;
     console.log(userdata)
     //const context = useContext(MyContext)
     return (

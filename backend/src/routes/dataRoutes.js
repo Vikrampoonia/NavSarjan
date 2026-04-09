@@ -31,6 +31,12 @@ export const buildDataRoutes = () => {
         validateBody(["collectionName", "condition", "data"], MESSAGES.VALIDATION.INVALID_INPUT),
         dataController.replace
     );
+    router.post(
+        "/invest",
+        authMiddleware.requireAuth,
+        validateBody(["collectionName", "entityId", "amount"], MESSAGES.VALIDATION.MISSING_INVESTMENT_FIELDS),
+        dataController.invest
+    );
 
     return router;
 };
