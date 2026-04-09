@@ -8,6 +8,7 @@ export const buildChatRoutes = () => {
     const router = express.Router();
 
     router.get("/chat/contact", authMiddleware.requireAuth, authMiddleware.requireSelf(["user"]), validateRequestFields(["user"], MESSAGES.VALIDATION.INVALID_INPUT), chatController.getContacts);
+    router.post("/chat/contact", authMiddleware.requireAuth, authMiddleware.requireSelf(["user"]), validateRequestFields(["user", "contact"], MESSAGES.VALIDATION.INVALID_INPUT), chatController.addContact);
     router.get("/chat/message", authMiddleware.requireAuth, authMiddleware.requireSelf(["from"]), validateRequestFields(["from", "to"], MESSAGES.VALIDATION.INVALID_INPUT), chatController.getMessages);
     router.post("/chat/readStatus", authMiddleware.requireAuth, validateRequestFields(["contact"], MESSAGES.VALIDATION.INVALID_INPUT), chatController.markReadStatus);
 

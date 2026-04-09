@@ -53,10 +53,13 @@ export const investInEntity = async ({ collectionName, entityId, amount }) =>
 
 export const getChatContacts = async (user) => unwrap(await axios.get(buildUrl(API_ROUTES.chat.contacts), { params: { user } }));
 
+export const addChatContact = async ({ user, contact }) =>
+    unwrap(await axios.post(buildUrl(API_ROUTES.chat.contacts), { user, contact }));
+
 export const getChatMessages = async ({ from, to }) => unwrap(await axios.get(buildUrl(API_ROUTES.chat.messages), { params: { from, to } }));
 
-export const markChatReadStatus = async (contact) => unwrap(await axios.post(buildUrl(API_ROUTES.chat.readStatus), { params: { contact } }));
+export const markChatReadStatus = async (contact) => unwrap(await axios.post(buildUrl(API_ROUTES.chat.readStatus), { contact }));
 
 export const getNotifications = async (user) => unwrap(await axios.get(buildUrl(API_ROUTES.chat.notifications), { params: { user } }));
 
-export const removeNotification = async ({ source, priority, user }) => unwrap(await axios.post(buildUrl(API_ROUTES.chat.removeNotification), { params: { source, priority, user } }));
+export const removeNotification = async ({ source, priority, user }) => unwrap(await axios.post(buildUrl(API_ROUTES.chat.removeNotification), { source, priority, contact: user }));

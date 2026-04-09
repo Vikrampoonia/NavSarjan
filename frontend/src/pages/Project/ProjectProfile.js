@@ -57,24 +57,35 @@ const ProjectProfile = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetchDocument({
-          collectionName: "project", // Name of the collection
-          condition: { _id: id }, // Replace with your condition, e.g., {status: "active"}
-          projection: {}, // Fields to fetch
-        });
+        let response;
+
+        // If id is provided from navigation state, fetch by id
+        if (id) {
+          response = await fetchDocument({
+            collectionName: "project",
+            condition: { _id: id },
+            projection: {},
+          });
+        } else {
+          // If no id, fetch by current user's email (ownerid)
+          response = await fetchDocument({
+            collectionName: "project",
+            condition: { ownerid: String(userdata?.email || "").trim() },
+            projection: {},
+          });
+        }
 
         if (response.success) {
-          const projects = response.data;
-          console.log(projects)
-
-          // Format data for rows
-          // Update projectRows state
-          setProject(projects);
-          // Update projectDash state
-          setLoading(false)
+          const projectData = response.data;
+          console.log("Fetched project:", projectData);
+          setProject(projectData);
+        } else {
+          console.log("No project found:", response.message);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching project data:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();

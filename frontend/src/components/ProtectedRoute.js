@@ -1,24 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Navigate } from "react-router-dom";
 import { getAuthToken, getStoredUser } from "../utils/authSession";
 
 const normalizeRole = (role) => String(role || "").trim().toLowerCase();
 
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-    const [token, setToken] = useState(getAuthToken());
-    const [userRole, setUserRole] = useState(normalizeRole(getStoredUser()?.role));
-
-    useEffect(() => {
-        const handleStorageChange = () => {
-            setToken(getAuthToken());
-            setUserRole(normalizeRole(getStoredUser()?.role));
-        };
-
-        window.addEventListener("storage", handleStorageChange);
-        return () => {
-            window.removeEventListener("storage", handleStorageChange);
-        };
-    }, []);
+    // Always read latest auth state to avoid stale role checks after same-tab login/logout.
+    const token = getAuthToken();
+    const userRole = normalizeRole(getStoredUser()?.role);
 
     if (!token) {
         return <Navigate to="/sign-page" replace />;

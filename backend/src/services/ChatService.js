@@ -40,6 +40,30 @@ export class ChatService {
         return Array.from(contactMap.values());
     }
 
+    async addContact({ user, contact }) {
+        const safeUser = String(user || "").trim().toLowerCase();
+        const safeContact = String(contact || "").trim().toLowerCase();
+
+        if (!safeUser || !safeContact) {
+            return { ok: false, message: "User and contact are required" };
+        }
+
+        if (safeUser === safeContact) {
+            return { ok: false, message: "You cannot add yourself as contact" };
+        }
+
+        await this.contactModel.updateOne(
+            { userName: safeUser },
+            {
+                $setOnInsert: { userName: safeUser },
+                $addToSet: { contactList: safeContact },
+            },
+            { upsert: true }
+        );
+
+        return { ok: true, message: "Contact added successfully" };
+    }
+
     async getMessages(from, to) {
         return this.chatModel
             .collection()

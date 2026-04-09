@@ -164,6 +164,7 @@ function CreateAccount() {
                                 <option value="startup">Startup</option>
                                 <option value="investor">Investor</option>
                                 <option value="policy-maker">Policy Maker</option>
+                                <option value="admin">Admin</option>
                             </select>
 
                             <input

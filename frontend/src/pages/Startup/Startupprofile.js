@@ -31,24 +31,35 @@ const StartupProfile = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetchDocument({
-          collectionName: "startup", // Name of the collection
-          condition: { _id: id }, // Replace with your condition, e.g., {status: "active"}
-          projection: {}, // Fields to fetch
-        });
+        let response;
+
+        // If id is provided from navigation state, fetch by id
+        if (id) {
+          response = await fetchDocument({
+            collectionName: "startup",
+            condition: { _id: id },
+            projection: {},
+          });
+        } else {
+          // If no id, fetch by current user's email
+          response = await fetchDocument({
+            collectionName: "startup",
+            condition: { founderuserid: String(userdata?.email || "").trim() },
+            projection: {},
+          });
+        }
 
         if (response.success) {
-          const startups = response.data;
-          console.log(startups)
-
-          // Format data for rows
-          // Update projectRows state
-          setStartup(startups);
-          // Update projectDash state
-          setLoading(false)
+          const startupData = response.data;
+          console.log("Fetched startup:", startupData);
+          setStartup(startupData);
+        } else {
+          console.log("No startup found:", response.message);
         }
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching startup data:", error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchData();
@@ -648,9 +659,7 @@ const StartupProfile = () => {
           </Button>
         </Link>
       </Card>
-      <Card>
-        <AdvancedResourceRequestForm />
-      </Card>
+
     </div>
   );
 };

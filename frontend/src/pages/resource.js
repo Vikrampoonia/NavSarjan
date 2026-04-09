@@ -19,6 +19,7 @@ import {
 import { useLocation } from 'react-router-dom';
 import { userdata } from './Home/Signpage';
 import { ROLES } from '../constants/roles';
+import { getStoredUser } from '../utils/authSession';
 
 const RESOURCE_CATEGORIES = {
   'Physical Infrastructure': [
@@ -55,8 +56,9 @@ const RESOURCE_CATEGORIES = {
 const ResourceRequestForm = () => {
   const location = useLocation();
   const routeState = location.state || {};
+  const currentUser = getStoredUser();
   const startupIdFromRoute = routeState.startupId || routeState.id || '';
-  const normalizedRole = String(userdata?.role || '').trim().toLowerCase();
+  const normalizedRole = String(currentUser?.role || userdata?.role || '').trim().toLowerCase();
 
   const [formData, setFormData] = useState({
     requestedResources: [],
@@ -78,8 +80,8 @@ const ResourceRequestForm = () => {
   const [startupContext, setStartupContext] = useState({
     id: startupIdFromRoute,
     name: routeState.startupName || routeState.name || '',
-    founderEmail: routeState.founderEmail || String(userdata?.email || ''),
-    requestedByName: String(userdata?.name || ''),
+    founderEmail: routeState.founderEmail || String(currentUser?.email || userdata?.email || ''),
+    requestedByName: String(currentUser?.name || userdata?.name || ''),
   });
 
   const formatDate = (date) => date.toISOString().split('T')[0];
@@ -218,8 +220,8 @@ const ResourceRequestForm = () => {
         startupRequestingid: startupContext.id,
         startupName: startupContext.name,
         founderuserid: startupContext.founderEmail,
-        requestRaisedByEmail: String(userdata?.email || startupContext.founderEmail || ''),
-        requestRaisedByName: String(userdata?.name || startupContext.requestedByName || ''),
+        requestRaisedByEmail: String(currentUser?.email || userdata?.email || startupContext.founderEmail || ''),
+        requestRaisedByName: String(currentUser?.name || userdata?.name || startupContext.requestedByName || ''),
         institute: selectedInstituteName,
         selectedDate: formData.timeAndDateNeeded ? new Date(formData.timeAndDateNeeded).toISOString().split('T')[0] : '',
         verified: false,

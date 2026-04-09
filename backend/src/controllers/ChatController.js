@@ -13,6 +13,13 @@ export class ChatController {
         return res.status(HTTP_STATUS.OK).json(result);
     });
 
+    addContact = asyncHandler(async (req, res) => {
+        const user = getParam(req, "user");
+        const contact = getParam(req, "contact");
+        const result = await this.chatService.addContact({ user, contact });
+        return res.status(HTTP_STATUS.OK).json(result);
+    });
+
     getMessages = asyncHandler(async (req, res) => {
         const from = getParam(req, "from");
         const to = getParam(req, "to");

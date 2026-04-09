@@ -1,28 +1,40 @@
-
-
-
-.chatContainer
-{
-    display:flex;
-    flex-direction:row;
-    width:100%;
+.chatContainer {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
     background-color: blanchedalmond;
 }
 
-.contactContainer
-{
-    width:35%;
-    border:1px solid black;
-    height:100%;
-    padding:5px;
+.contactContainer {
+    width: 35%;
+    border: 1px solid black;
+    height: 100%;
+    padding: 5px;
 }
 
-.contactHeader
-{
-    display:flex;
+.contactHeader {
+    display: flex;
     flex-direction: column;
-    
-    font-weight:600;
+
+    font-weight: 600;
+}
+
+.searchRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.searchRow input {
+    flex: 1;
+}
+
+.clearSearchBtn {
+    background-color: #f3f3f3;
+    border: 1px solid #c4c4c4;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
 }
 
 
@@ -30,115 +42,133 @@
 
 
 
-.contactContainer button
-{
-    font-weight:500;
-    border:none;
+.contactContainer button {
+    font-weight: 500;
+    border: none;
     background-color: blanchedalmond;
-    margin-bottom:2px;
+    margin-bottom: 2px;
 }
 
-.contactContainer button:hover
-{
-    cursor:pointer;
-    font-weight:550;
-    border:0.1px solid rgb(52, 50, 50);
-    padding:2px;
-  
+.contactContainer button:hover {
+    cursor: pointer;
+    font-weight: 550;
+    border: 0.1px solid rgb(52, 50, 50);
+    padding: 2px;
+
 }
 
-.contactBox
-{
-    display:flex;
+.contactBox {
+    display: flex;
     flex-direction: column;
-    margin-top:2px;
-    padding:2px;
+    margin-top: 2px;
+    padding: 2px;
 }
 
-.contactBoxContainer
-{
-    display:flex;
+.contactBoxContainer {
+    display: flex;
     justify-content: space-between;
 }
 
-.contactBoxContainer:hover
-{
-    cursor:pointer;
-    background-color:rgba(240, 236, 230, 0.771);
+.contactBoxContainer:hover {
+    cursor: pointer;
+    background-color: rgba(240, 236, 230, 0.771);
 }
 
-.contactBoxContainer 
-{
-    border-bottom:0.4px solid rgb(89, 80, 80);
-    padding:2px;
+.contactBoxContainer.activeContact {
+    background-color: #e6f0ff;
+    border-left: 3px solid #2f80ed;
+    padding-left: 8px;
 }
 
-.dot
-{
-   
-    padding:0.5px;
+.contactBoxContainer {
+    border-bottom: 0.4px solid rgb(89, 80, 80);
+    padding: 2px;
+}
+
+.dot {
+
+    padding: 0.5px;
     border-radius: 45%;
-    width:auto;
+    width: auto;
     background-color: rgb(113, 232, 192);
+}
+
+.unreadBadge {
+    min-width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    background-color: #2f80ed;
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
 }
 
 .chatBox {
     display: flex;
     flex-direction: column;
-    gap: 10px; /* Add spacing between messages */
+    gap: 10px;
+    /* Add spacing between messages */
     padding: 10px;
     height: auto;
-    width:100%;
-    overflow-y: auto; /* Enable scrolling if content overflows */
+    width: 100%;
+    overflow-y: auto;
+    /* Enable scrolling if content overflows */
 }
 
 .messageleft {
-    align-self: flex-start; /* Align to the left */
+    align-self: flex-start;
+    /* Align to the left */
     padding: 10px;
     background-color: rgb(173, 154, 242);
     border-radius: 5px;
     margin-bottom: 5px;
-    max-width: 60%; /* Limit message width */
-    word-wrap: break-word; /* Handle long words */
+    max-width: 60%;
+    /* Limit message width */
+    word-wrap: break-word;
+    /* Handle long words */
 }
 
 .messageright {
-    align-self: flex-end; /* Align to the right */
+    align-self: flex-end;
+    /* Align to the right */
     padding: 10px;
     background-color: rgb(194, 242, 154);
     border-radius: 5px;
     margin-bottom: 5px;
-    max-width: 60%; /* Limit message width */
-    word-wrap: break-word; /* Handle long words */
+    max-width: 60%;
+    /* Limit message width */
+    word-wrap: break-word;
+    /* Handle long words */
 }
 
 
-.inputBox
-{
-    display:flex;
+.inputBox {
+    display: flex;
     flex-direction: row;
-    width:63%;
-    position:relative;
-    bottom:2px;
+    width: 63%;
+    position: relative;
+    bottom: 2px;
     align-items: flex-end;
-    margin-top:15px;
+    margin-top: 15px;
 }
 
-.inputBox input
-{
-    height:auto;
-    width:100%;
+.inputBox input {
+    height: auto;
+    width: 100%;
     background-color: rgb(150, 194, 252);
-    border:none;
-    border-radius:3px;
+    border: none;
+    border-radius: 3px;
 }
 
 
-.inputBox button
-{
-    padding:5px;
-    background-color:rgb(230, 241, 177);
-    border-radius:5px;
+.inputBox button {
+    padding: 5px;
+    background-color: rgb(230, 241, 177);
+    border-radius: 5px;
     margin-left: 5px;
 }
 
@@ -146,30 +176,77 @@
 
 
 
-.chatBoxHeader
-{
-    display:flex;
+.chatBoxHeader {
+    display: flex;
     justify-content: space-around;
-    height:8%;
+    height: 8%;
     font-weight: 650;
     font-size: medium;
-    width:74%;
+    width: 74%;
     text-align: center;
-    top:0px;
+    top: 0px;
     background-color: transparent;
-    left:26%;
-    padding:1px;
-    
+    left: 26%;
+    padding: 1px;
+
 }
 
-.chatBoxHeaderName
-{
-    width:75%;
+.chatBoxHeaderName {
+    width: 75%;
     justify-content: center;
 }
 
-.chatBoxHeaderVideoCall
-{
-    height:90%;
-   width:8%;
+.chatBoxHeaderVideoCall {
+    height: 90%;
+    width: 8%;
+}
+
+.contactModalOverlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.contactModal {
+    width: min(92vw, 420px);
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.contactModal h3 {
+    margin: 0 0 12px 0;
+}
+
+.contactModal input {
+    width: 100%;
+    border: 1px solid #c8c8c8;
+    border-radius: 6px;
+    padding: 10px;
+}
+
+.contactModalError {
+    margin-top: 8px;
+    margin-bottom: 0;
+    color: #c0392b;
+    font-size: 0.9rem;
+}
+
+.contactModalActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.contactModalActions button {
+    border: none;
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
 }
