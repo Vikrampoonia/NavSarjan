@@ -77,10 +77,9 @@ const ProjectProfile = () => {
 
         if (response.success) {
           const projectData = response.data;
-          console.log("Fetched project:", projectData);
           setProject(projectData);
         } else {
-          console.log("No project found:", response.message);
+          // Not found
         }
       } catch (error) {
         console.error("Error fetching project data:", error);

@@ -152,7 +152,7 @@ const start = async () => {
         chatService.bindSocket(io);
 
         httpServer.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}`);
+            // Server started
         });
     } catch (error) {
         console.error("Failed to start backend:", error);

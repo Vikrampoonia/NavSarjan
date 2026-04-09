@@ -51,10 +51,9 @@ const StartupProfile = () => {
 
         if (response.success) {
           const startupData = response.data;
-          console.log("Fetched startup:", startupData);
           setStartup(startupData);
         } else {
-          console.log("No startup found:", response.message);
+          // Not found
         }
       } catch (error) {
         console.error("Error fetching startup data:", error);

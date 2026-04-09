@@ -10,11 +10,6 @@ import { getStoredUser } from '../../utils/authSession';
 function Chat() {
     const currentUser = getStoredUser();
     let user = currentUser?.email || userdata?.email || ""; //userEmail
-    console.log("user: " + user);
-    console.log("socket in chat" + socketvalue.id);
-    if (!socketvalue) {
-        console.log("socketvalue in chat: " + socketvalue.id);
-    }
 
     const [contactQueue, setContactQueue] = useState([]);
     const [chatQueue, setChatQueue] = useState([]);
@@ -31,10 +26,10 @@ function Chat() {
     const loadContacts = useCallback(() => {
         getChatContacts(user)
             .then(res => {
-                console.log("Contact directory" + JSON.stringify(res, null, 2));
+
                 setContactQueue(Array.isArray(res) ? res : []);
             })
-            .catch(err => console.log(err));
+            .catch(err => { });
     }, [user]);
 
     const filteredContacts = useMemo(() => {
@@ -61,7 +56,6 @@ function Chat() {
         }
         //send message to server
         document.getElementById('input').value = "";
-        console.log("message: " + message);
         socketvalue.emit("message", ({ from: source, to: dest, message: message }));
 
     }
@@ -79,7 +73,6 @@ function Chat() {
         //server send message
         if (socketvalue && socketvalue.on) {
             socketvalue.on("newMessage", ({ from, to, message }) => {
-                console.log("Getting new message");
                 if ((from === dest && to === user) || (from === user && to === dest)) {
                     setChatQueue(prevChats => [...prevChats, {
                         Source: from,
@@ -178,7 +171,6 @@ function Chat() {
         );
         let to = contact;
         let from = user;
-        console.log("contact: " + contact);
 
         if (socketvalue && socketvalue.emit) {
             socketvalue.emit("joinRoom", { from: user, to: contact });
@@ -187,20 +179,18 @@ function Chat() {
         //make api call to load data
         getChatMessages({ from, to })
             .then(res => {
-                console.log("Chat directory: " + JSON.stringify(res, null, 2));
                 setChatQueue(res);
             })
-            .catch(err => console.log(err));
+            .catch(err => { });
 
 
         //make api call to mark all related message read
         markChatReadStatus(contact)
             .then(res => {
-                console.log("res: " + JSON.stringify(res, null, 2));
                 // Don't reload all contacts - just update the clicked one
                 // loadContacts() removed for performance optimization
             })
-            .catch(err => console.log(err));
+            .catch(err => { });
 
         setTimeout(scrollToBottom, 0);
 

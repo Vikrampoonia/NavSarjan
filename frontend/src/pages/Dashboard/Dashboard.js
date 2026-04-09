@@ -19,7 +19,6 @@ const Dashboard = ({ socketValue }) => {
   const [, setSocket] = useState(null);
   let user = userdata.email;
   const token = localStorage.getItem('navsarjan_token');
-  console.log("user in dashboard to check socket: " + user);
 
 
   useEffect(() => {
@@ -41,8 +40,6 @@ const Dashboard = ({ socketValue }) => {
 
     // Socket connection event
     newSocket.on("connect", () => {
-      console.log("Client Id: " + newSocket.id);
-
       // Pass socket to parent component
       socketValue(newSocket);
 

@@ -26,33 +26,7 @@ function Signpage() {
         password,
       });
 
-      console.log("Response:", JSON.stringify(response.data, null, 2));
-
-      if (response.success) {
-        // Save user data to the global variable
-        const nextUser = {
-          email: response.data.email,
-          id: response.data.id,
-          name: response.data.name,
-          role: response.data.role
-        };
-        setUserdata(nextUser);
-
-        setAuthSession({
-          token: response.token,
-          refreshToken: response.refreshToken,
-          user: nextUser,
-        });
-
-        console.log("Userdata:", nextUser);
-
-        alert(MESSAGES.AUTH.LOGIN_SUCCESS);// Pass the email to the parent component
-        navigate("/dashboard"); // Navigate to the dashboard
-      } else {
-        alert(response.message);
-      }
-    } catch (error) {
-      console.error("Error during login:", error);
+      console.log("Error during login:", error);
       alert(MESSAGES.AUTH.LOGIN_FAILED);
     } finally {
       setIsLoading(false); // Reset loading state
