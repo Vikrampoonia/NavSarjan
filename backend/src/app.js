@@ -11,7 +11,9 @@ export const buildApp = ({ authRoutes, dataRoutes, chatRoutes, rateLimiters }) =
     app.use(requestLogger);
     app.use(express.json({ limit: "10mb" }));
     app.use(express.urlencoded({ limit: "10mb", extended: true }));
-
+    app.get("/", (req, res) => {
+        res.send("Backend is running 🚀");
+    });
     app.use("/api", apiLimiter, authRoutes);
     app.use("/api", apiLimiter, dataRoutes);
     app.use("/home", apiLimiter, chatRoutes);
